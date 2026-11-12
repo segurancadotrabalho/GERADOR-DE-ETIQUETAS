@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#174ea6">
+<meta name="description" content="Gerador de etiquetas para materiais e caixas do almoxarifado.">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./icons/icon.svg">
+<title>Gerador de Etiquetas - Almoxarifado</title>
+<style>
+:root{font-family:Arial,Helvetica,sans-serif;color:#172033;background:#f3f5f8}
+*{box-sizing:border-box}body{margin:0;padding:24px}.app{max-width:1150px;margin:auto}
+header{margin-bottom:20px}h1{margin:0 0 6px;font-size:28px}header p{margin:0;color:#5d6879}
+.layout{display:grid;grid-template-columns:minmax(300px,390px) 1fr;gap:20px;align-items:start}
+.panel{background:#fff;border:1px solid #dfe4eb;border-radius:14px;padding:20px;box-shadow:0 3px 12px #1b2a4410}
+h2{font-size:17px;margin:0 0 15px}.box-form-title{font-size:21px;font-weight:800;color:#174ea6;padding-bottom:9px;border-bottom:2px solid #dbe6f7;margin-bottom:18px}.field{margin-bottom:12px}label{display:block;font-size:13px;font-weight:700;margin-bottom:5px}
+input,select,textarea{width:100%;border:1px solid #cbd3df;border-radius:8px;padding:10px;font:inherit;background:#fff}
+textarea{resize:vertical;min-height:65px}.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+button{border:0;border-radius:8px;padding:11px 14px;font-weight:700;cursor:pointer;font-size:14px}
+.primary{background:#174ea6;color:#fff}.secondary{background:#e9eef6;color:#23334d}.danger{background:#fff0f0;color:#a32020}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.hint{font-size:12px;color:#697586;line-height:1.45;margin-top:8px}
+.preview-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:15px}
+.preview-head h2{margin:0}.counter{font-size:12px;color:#667085}
+.labels{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.label{border:1px dashed #aeb8c7;background:#fff;padding:10px;min-height:132px;position:relative;overflow:hidden;color:#111}
+.brand{font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#4b5563;border-bottom:1px solid #cbd0d8;padding-bottom:5px;margin-bottom:6px}
+.desc{font-size:19px;font-weight:800;line-height:1.05;margin:5px 0;overflow-wrap:anywhere}.code{font-size:12px;font-weight:700;color:#174ea6;margin:3px 0}
+.meta{font-size:11px;line-height:1.4;color:#303846;overflow-wrap:anywhere}
+.remove{position:absolute;right:5px;top:5px;background:#fff0f0;color:#a32020;padding:4px 7px;font-size:11px}
+.empty{border:1px dashed #cbd3df;border-radius:10px;padding:35px;text-align:center;color:#778195}
+.tabs{display:flex;gap:8px;margin-bottom:16px}.tab{flex:1;background:#e9eef6;color:#23334d}.tab.active{background:#174ea6;color:#fff}
+.tab-content[hidden]{display:none!important}.label[data-type="box"]{display:flex;align-items:center;justify-content:center;text-align:center}
+.box-number{font-size:28px;font-weight:900;letter-spacing:1px;overflow-wrap:anywhere;width:100%}
+.recommended{font-weight:900;color:#174ea6}
+@media(max-width:800px){body{padding:14px}.layout{grid-template-columns:1fr}.labels{grid-template-columns:1fr}}
+@media print{
+ @page{size:A4;margin:8mm}
+ body{background:#fff;padding:0}.app>header,.form-panel,.preview-head,.remove,.hint{display:none!important}
+ .layout{display:block}.panel{border:0;box-shadow:none;padding:0}.labels{display:grid;grid-template-columns:repeat(2,100mm);gap:2mm}
+ .label{width:100mm;height:50mm;min-height:50mm;border:1px solid #777;border-radius:0;break-inside:avoid;padding:5mm}
+ .brand{font-size:8pt}.desc{font-size:15pt}.meta{font-size:8pt}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<header><h1>Gerador de Etiquetas</h1><p>Monte etiquetas para identificação de materiais, peças e endereços do almoxarifado.</p></header>
+<div class="layout">
+<section class="panel form-panel">
+<div class="tabs" role="tablist" aria-label="Tipo de etiqueta">
+<button type="button" class="tab active" id="tabProducts" role="tab" aria-selected="true">Etiqueta dos produtos</button>
+<button type="button" class="tab" id="tabBoxes" role="tab" aria-selected="false">Etiqueta número de caixa</button>
+</div>
+<div id="productForm" class="tab-content">
+<h2>Dados da etiqueta do produto</h2>
+<div class="field"><label for="company">Empresa / setor (opcional)</label><input id="company" placeholder="Ex.: Tati Minas - Almoxarifado"></div>
+<div class="field"><label for="desc">Descrição do material *</label><textarea id="desc" placeholder="Ex.: Rolamento rígido de esferas 6205"></textarea></div>
+<div class="field"><label for="code">Código produto</label><input id="code" placeholder="Ex.: 000123"></div>
+<div class="field"><label for="maker">Fabricante</label><input id="maker" placeholder="Ex.: SKF"></div>
+<div class="two">
+<div class="field"><label for="size">Tamanho da etiqueta</label><select id="size">
+<optgroup label="ETIQUETAS DE BAIXO">
+<option value="150x10" class="recommended">★ 15 x 1 cm (150 x 10 mm) — DESTAQUE</option>
+<option value="210x10">21 x 1 cm (210 x 10 mm)</option>
+<option value="67x20">6,7 x 2 cm (67 x 20 mm)</option>
+<option value="50x20">5 x 2 cm (50 x 20 mm)</option>
+<option value="40x20">4 x 2 cm (40 x 20 mm)</option>
+<option value="30x15">3 x 1,5 cm (30 x 15 mm)</option>
+</optgroup>
+<optgroup label="ETIQUETAS DE CIMA">
+<option value="100x30" class="recommended">★ 10 x 3 cm (100 x 30 mm) — DESTAQUE</option>
+<option value="50x30">5 x 3 cm (50 x 30 mm)</option>
+<option value="70x30">7 x 3 cm (70 x 30 mm)</option>
+<option value="100x50">10 x 5 cm (100 x 50 mm)</option>
+</optgroup>
+</select></div>
+<div class="field"><label for="copies">Cópias</label><input id="copies" type="number" min="1" max="100" value="1"></div>
+</div>
+<div class="actions"><button class="primary" id="add">Adicionar etiqueta</button><button class="secondary" id="clear">Limpar campos</button></div>
+<p class="hint">Os tamanhos 15 x 1 cm (etiquetas de baixo) e 10 x 3 cm (etiquetas de cima) estão destacados. Use o mesmo tamanho em todas as etiquetas de uma impressão. Configure a impressora em escala 100%.</p>
+</div>
+<div id="boxForm" class="tab-content" hidden>
+<h2 class="box-form-title">Dados da etiqueta número de caixa</h2>
+<div class="field"><label for="boxNumber">Modelo da etiqueta (prefixo + número) *</label><input id="boxNumber" placeholder="Ex.: E - 1" autocomplete="off"></div>
+<p class="hint">Informe o primeiro número da sequência. Ex.: ao digitar <b>E - 1</b> e selecionar 20 etiquetas, serão geradas automaticamente E - 1 até E - 20. Você também pode começar em outro número, como E - 15.</p>
+<p class="hint">Tamanho fixo: 7 x 2 cm (70 x 20 mm). Na impressão, as etiquetas de caixas serão organizadas em duas colunas na folha A4.</p>
+<div class="field"><label for="boxFontSize">Tamanho da fonte</label><select id="boxFontSize">
+<option value="auto">Automático — ajusta para caber</option>
+<option value="12">Pequena — 12 pt</option>
+<option value="14">Média — 14 pt</option>
+<option value="16">Média — 16 pt</option>
+<option value="18">Grande — 18 pt</option>
+<option value="20" selected>Grande — 20 pt</option>
+<option value="22">Extra grande — 22 pt</option>
+<option value="24">Extra grande — 24 pt</option>
+</select><p class="hint">O tamanho escolhido será aplicado na pré-visualização e na impressão. Se o texto for comprido, ele será ajustado para caber na etiqueta de 7 x 2 cm.</p></div>
+<div class="field"><label for="boxCopies">Quantidade de etiquetas da sequência</label><input id="boxCopies" type="number" min="1" max="100" value="1"></div>
+<div class="actions"><button class="primary" id="addBox">Gerar sequência de caixas</button><button class="secondary" id="clearBox">Limpar campo</button></div>
+</div>
+</section>
+<section class="panel">
+<div class="preview-head"><h2>Pré-visualização</h2><span class="counter" id="counter">0 etiquetas</span></div>
+<div class="actions" style="margin:0 0 14px"><button class="primary" id="print">Imprimir etiquetas</button><button class="secondary" id="shareFile">Gerar arquivo / WhatsApp</button><button class="secondary" id="clearAll">Apagar todas</button></div>
+  <p class="hint">No celular, toque em “Gerar arquivo / WhatsApp” e escolha WhatsApp para enviar o arquivo ao computador. No computador, abra o arquivo recebido e clique em Imprimir.</p>
+<div id="labels" class="labels"><div class="empty">Suas etiquetas aparecerão aqui.</div></div>
+</section>
+</div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+let items=[];
+let activeTab='products';
+function escapeHTML(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function switchTab(tab){
+ activeTab=tab;
+ $('productForm').hidden=tab!=='products'; $('boxForm').hidden=tab!=='boxes';
+ $('tabProducts').classList.toggle('active',tab==='products');
+ $('tabBoxes').classList.toggle('active',tab==='boxes');
+ $('tabProducts').setAttribute('aria-selected',String(tab==='products'));
+ $('tabBoxes').setAttribute('aria-selected',String(tab==='boxes'));
+}
+$('tabProducts').addEventListener('click',()=>switchTab('products'));
+$('tabBoxes').addEventListener('click',()=>switchTab('boxes'));
+function render(){
+ const area=$('labels'); $('counter').textContent=items.length+' etiqueta(s)';
+ if(!items.length){area.innerHTML='<div class="empty">Suas etiquetas aparecerão aqui.</div>';return;}
+ area.innerHTML=items.map((x,i)=>`<article class="label" data-size="${x.size}" data-type="${x.type}">
+ <button class="remove" onclick="removeItem(${i})" title="Remover">Remover</button>
+ ${x.type==='box'?`<div class="box-number" style="font-size:${x.fontSize==='auto'?'clamp(16px, 5vw, 28px)':(Number(x.fontSize)*1.333)+'px'}">${escapeHTML(x.number)}</div>`:`${x.company?`<div class="brand">${escapeHTML(x.company)}</div>`:''}<div class="desc">${escapeHTML(x.desc)}</div>${x.code?`<div class="code">Código: ${escapeHTML(x.code)}</div>`:''}<div class="meta">${x.maker?'<b>Fabricante:</b> '+escapeHTML(x.maker):''}</div>`}
+ </article>`).join('');
+}
+function removeItem(i){items.splice(i,1);render();}
+$('add').addEventListener('click',()=>{
+ const desc=$('desc').value.trim();
+ if(!desc){alert('Informe a descrição do material.');return;}
+ const n=Math.max(1,Math.min(100,parseInt($('copies').value,10)||1));
+ const data={type:'product',company:$('company').value.trim(),desc,code:$('code').value.trim(),maker:$('maker').value.trim(),size:$('size').value};
+ for(let i=0;i<n;i++)items.push({...data}); render();
+});
+$('addBox').addEventListener('click',()=>{
+ const model=$('boxNumber').value.trim();
+ if(!model){alert('Digite o modelo da etiqueta. Exemplo: E - 1');return;}
+ const match=model.match(/^(.*?)(\d+)$/);
+ if(!match){
+  alert('O modelo precisa terminar com um número. Exemplo: E - 1');
+  $('boxNumber').focus();
+  return;
+ }
+ const prefix=match[1];
+ const firstNumber=parseInt(match[2],10);
+ const digits=match[2].length;
+ const n=Math.max(1,Math.min(100,parseInt($('boxCopies').value,10)||1));
+ for(let i=0;i<n;i++){
+  const sequenceNumber=String(firstNumber+i).padStart(digits,'0');
+  items.push({type:'box',number:prefix+sequenceNumber,size:'70x20',fontSize:$('boxFontSize').value});
+ }
+ render();
+});
+$('clear').addEventListener('click',()=>['desc','code','maker'].forEach(id=>$(id).value=''));
+$('clearBox').addEventListener('click',()=>{$('boxNumber').value='';});
+$('clearAll').addEventListener('click',()=>{if(items.length&&confirm('Apagar todas as etiquetas?')){items=[];render();}});
+
+function buildPrintableHTML(){
+  if(!items.length){alert('Adicione pelo menos uma etiqueta antes de gerar o arquivo.');return null;}
+  const first=items[0].size;
+  if(items.some(x=>x.size!==first)){
+    alert('Para gerar um único arquivo, use apenas etiquetas do mesmo tamanho e tipo.');return null;
+  }
+  const dims=first.split('x').map(Number);
+  const isBox=items[0].type==='box';
+  const cards=items.map(x=>{
+    if(x.type==='box'){
+      const font=x.fontSize==='auto'?'16pt':(Number(x.fontSize)+'pt');
+      return `<article class="label box"><div class="box-number" style="font-size:${font}">${escapeHTML(x.number)}</div></article>`;
+    }
+    return `<article class="label product">
+      ${x.company?`<div class="brand">${escapeHTML(x.company)}</div>`:''}
+      <div class="desc">${escapeHTML(x.desc)}</div>
+      ${x.code?`<div class="code">Código: ${escapeHTML(x.code)}</div>`:''}
+      ${x.maker?`<div class="meta"><b>Fabricante:</b> ${escapeHTML(x.maker)}</div>`:''}
+    </article>`;
+  }).join('');
+  return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Etiquetas para impressão</title>
+  <style>
+  *{box-sizing:border-box}body{font-family:Arial,sans-serif;margin:12mm;color:#111}
+  .toolbar{margin-bottom:14px}.toolbar button{background:#174ea6;color:white;border:0;border-radius:7px;padding:10px 16px;font-weight:bold}
+  .labels{display:grid;grid-template-columns:${isBox?'repeat(2,70mm)':dims[0]+'mm'};column-gap:${isBox?'4mm':'2mm'};row-gap:2mm;justify-content:${isBox?'center':'start'}}
+  .label{width:${dims[0]}mm;height:${dims[1]}mm;min-height:${dims[1]}mm;border:1px solid #777;padding:${isBox?'1mm':'1mm 2mm'};display:flex;align-items:center;justify-content:${isBox?'center':'flex-start'};gap:4mm;overflow:hidden;break-inside:avoid}
+  .brand{font-size:6pt;font-weight:bold;white-space:nowrap}.desc{font-size:11pt;font-weight:bold;flex:1;margin:0;overflow-wrap:anywhere}.code{font-size:7pt;white-space:nowrap}.meta{font-size:6pt;white-space:nowrap}
+  .box-number{font-weight:900;text-align:center;width:100%;line-height:1;overflow-wrap:anywhere;word-break:break-word}
+  @page{size:A4;margin:8mm}
+  @media print{body{margin:0}.toolbar{display:none}}
+  </style></head><body>
+  <div class="toolbar"><button onclick="window.print()">Imprimir etiquetas</button>
+  <p>Confira o tamanho do papel e selecione escala 100% (tamanho real) na impressão.</p></div>
+  <main class="labels">${cards}</main><script>
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js').catch(error =>
+      console.warn('Falha ao ativar funcionamento offline:', error)
+    );
+  });
+}
+</script>
+</body></html>`;
+}
+$('shareFile').addEventListener('click',async()=>{
+  const content=buildPrintableHTML();
+  if(!content)return;
+  const blob=new Blob([content],{type:'text/html;charset=utf-8'});
+  const file=new File([blob],'etiquetas-para-imprimir.html',{type:'text/html'});
+  try{
+    if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file],title:'Etiquetas para impressão',text:'Arquivo de etiquetas. Abra no computador e imprima.'});
+    }else{
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');a.href=url;a.download='etiquetas-para-imprimir.html';
+      document.body.appendChild(a);a.click();a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),1500);
+      alert('Arquivo gerado! No celular, localize o arquivo baixado e compartilhe pelo WhatsApp.');
+    }
+  }catch(err){
+    if(err.name!=='AbortError')alert('Não foi possível abrir o compartilhamento. Tente novamente ou use a opção de baixar arquivo.');
+  }
+});
+
+$('print').addEventListener('click',()=>{
+ if(!items.length){alert('Adicione pelo menos uma etiqueta antes de imprimir.');return;}
+ const first=items[0].size;
+ if(items.some(x=>x.size!==first)){alert('Para imprimir corretamente, use apenas etiquetas do mesmo tamanho e tipo por impressão.');return;}
+ const dims=first.split('x').map(Number); const isBox=items[0].type==='box';
+ document.querySelectorAll('.label').forEach(el=>{el.style.width=dims[0]+'mm';el.style.height=dims[1]+'mm';el.style.minHeight=dims[1]+'mm';});
+ const style=document.createElement('style'); style.id='print-dynamic';
+ style.textContent=`@media print{
+ .labels{
+    grid-template-columns:${isBox ? 'repeat(2,70mm)' : dims[0]+'mm'};
+    column-gap:${isBox ? '4mm' : '2mm'};
+    row-gap:2mm;
+    justify-content:${isBox ? 'center' : 'start'};
+  }
+ .label{width:${dims[0]}mm!important;height:${dims[1]}mm!important;min-height:${dims[1]}mm!important;padding:${isBox?'1mm':'1mm 2mm'};display:flex;align-items:center;justify-content:${isBox?'center':'flex-start'};gap:4mm}
+ .brand{font-size:6pt;border:0;padding:0;margin:0;white-space:nowrap}
+ .desc{font-size:${isBox?'11pt':'11pt'};flex:1;margin:0}
+ .code{font-size:7pt;margin:0;white-space:nowrap}.meta{font-size:6pt;white-space:nowrap}
+ .box-number{font-size:${isBox ? (items[0].fontSize==='auto' ? '16pt' : items[0].fontSize+'pt') : '20pt'};font-weight:900;text-align:center;width:100%;line-height:1;overflow-wrap:anywhere;word-break:break-word}
+ }`;
+ document.head.appendChild(style);window.print();style.remove();render();
+});
+render();
+</script>
+</body>
+</html>
