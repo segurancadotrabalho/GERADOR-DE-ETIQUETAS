@@ -1,0 +1,2 @@
+# GERADOR-DE-ETIQUETAS
+Gerar Etiquetas
