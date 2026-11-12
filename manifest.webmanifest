@@ -1,0 +1,19 @@
+{
+  "id": "./",
+  "name": "Gerador de Etiquetas",
+  "short_name": "Etiquetas",
+  "description": "Gerador de etiquetas para materiais e caixas do almoxarifado.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f3f5f8",
+  "theme_color": "#174ea6",
+  "icons": [
+    {
+      "src": "./icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
